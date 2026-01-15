@@ -1,0 +1,33 @@
+name: Update EPG XML
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Robot jalan setiap 6 jam sekali
+  workflow_dispatch: # Tombol manual untuk memaksa update
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Download dan Extract EPG
+        run: |
+          # 1. Download file GZ dari sumber asli
+          wget https://warningfm.github.io/x1/epg/guide.xml.gz -O guide.xml.gz
+          
+          # 2. Extract menjadi guide.xml (menimpa file lama)
+          gzip -df guide.xml.gz
+
+      - name: Commit dan Push
+        run: |
+          git config user.name "Robot EPG"
+          git config user.email "actions@github.com"
+          git add guide.xml
+          # Commit hanya jika ada perubahan, kalau tidak ada perubahan diam saja
+          git commit -m "Update jadwal TV harian" || exit 0
+          git push
